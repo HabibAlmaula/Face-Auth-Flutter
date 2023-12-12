@@ -11,6 +11,7 @@ import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({Key? key}) : super(key: key);
@@ -28,6 +29,8 @@ class SignInState extends State<SignIn> {
 
   bool _isPictureTaken = false;
   bool _isInitializing = false;
+
+  User? user;
 
   @override
   void initState() {
@@ -65,7 +68,18 @@ class SignInState extends State<SignIn> {
     assert(image != null, 'Image is null');
     await _faceDetectorService.detectFacesFromImage(image!);
     if (_faceDetectorService.faceDetected) {
+      Logger().i('Face detected');
       _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
+      //predict
+      User? user = await _mlService.predict();
+      Logger().i('User: $user');
+      setState(() {
+        this.user = user;
+      });
+
+      if (user != null) {
+        onTap();
+      }
     }
     if (mounted) setState(() {});
   }
@@ -105,7 +119,9 @@ class SignInState extends State<SignIn> {
     if (_isInitializing) return Center(child: CircularProgressIndicator());
     if (_isPictureTaken)
       return SinglePicture(imagePath: _cameraService.imagePath!);
-    return CameraDetectionPreview();
+    return CameraDetectionPreview(
+      user: this.user,
+    );
   }
 
   @override

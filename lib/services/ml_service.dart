@@ -5,8 +5,10 @@ import 'package:camera/camera.dart';
 import 'package:face_net_authentication/pages/db/databse_helper.dart';
 import 'package:face_net_authentication/pages/models/user.model.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:tflite_flutter/src/bindings/tensorflow_lite_bindings_generated.dart';
+
 import 'package:image/image.dart' as imglib;
 
 class MLService {
@@ -23,22 +25,22 @@ class MLService {
         delegate = GpuDelegateV2(
           options: GpuDelegateOptionsV2(
             isPrecisionLossAllowed: false,
-            inferencePreference: TfLiteGpuInferenceUsage.fastSingleAnswer,
-            inferencePriority1: TfLiteGpuInferencePriority.minLatency,
-            inferencePriority2: TfLiteGpuInferencePriority.auto,
-            inferencePriority3: TfLiteGpuInferencePriority.auto,
+            inferencePreference: TfLiteGpuInferenceUsage.TFLITE_GPU_INFERENCE_PREFERENCE_FAST_SINGLE_ANSWER,
+            inferencePriority1: TfLiteGpuInferencePriority.TFLITE_GPU_INFERENCE_PRIORITY_MIN_LATENCY,
+            inferencePriority2: TfLiteGpuInferencePriority.TFLITE_GPU_INFERENCE_PRIORITY_AUTO,
+            inferencePriority3: TfLiteGpuInferencePriority.TFLITE_GPU_INFERENCE_PRIORITY_AUTO,
           ),
         );
       } else if (Platform.isIOS) {
         delegate = GpuDelegate(
           options: GpuDelegateOptions(
               allowPrecisionLoss: true,
-              waitType: TFLGpuDelegateWaitType.active),
+              waitType: TFLGpuDelegateWaitType.TFLGpuDelegateWaitTypeActive),
         );
       }
       var interpreterOptions = InterpreterOptions()..addDelegate(delegate);
 
-      this._interpreter = await Interpreter.fromAsset('mobilefacenet.tflite',
+      this._interpreter = await Interpreter.fromAsset('assets/mobilefacenet.tflite',
           options: interpreterOptions);
     } catch (e) {
       print('Failed to load model.');
@@ -108,19 +110,28 @@ class MLService {
     DatabaseHelper _dbHelper = DatabaseHelper.instance;
 
     List<User> users = await _dbHelper.queryAllUsers();
+    User user = users.first;
+
     double minDist = 999;
     double currDist = 0.0;
     User? predictedResult;
 
     print('users.length=> ${users.length}');
+    users.map((e) => print("model_data ${e.modelData}"));
 
-    for (User u in users) {
-      currDist = _euclideanDistance(u.modelData, predictedData);
-      if (currDist <= threshold && currDist < minDist) {
-        minDist = currDist;
-        predictedResult = u;
-      }
+    currDist = _euclideanDistance(user.modelData, predictedData);
+    if (currDist <= threshold && currDist < minDist) {
+      minDist = currDist;
+      predictedResult = user;
     }
+
+    // for (User u in users) {
+    //   currDist = _euclideanDistance(u.modelData, predictedData);
+    //   if (currDist <= threshold && currDist < minDist) {
+    //     minDist = currDist;
+    //     predictedResult = u;
+    //   }
+    // }
     return predictedResult;
   }
 

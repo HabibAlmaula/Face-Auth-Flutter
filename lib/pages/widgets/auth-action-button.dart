@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/pages/db/databse_helper.dart';
 import 'package:face_net_authentication/pages/models/user.model.dart';
@@ -7,6 +8,7 @@ import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart';
+import 'package:logger/logger.dart';
 import '../home.dart';
 import 'app_text_field.dart';
 
@@ -16,9 +18,11 @@ class AuthActionButton extends StatefulWidget {
       required this.onPressed,
       required this.isLogin,
       required this.reload});
+
   final Function onPressed;
   final bool isLogin;
   final Function reload;
+
   @override
   _AuthActionButtonState createState() => _AuthActionButtonState();
 }
@@ -34,17 +38,28 @@ class _AuthActionButtonState extends State<AuthActionButton> {
 
   User? predictedUser;
 
+  final db = FirebaseFirestore.instance;
+
   Future _signUp(context) async {
     DatabaseHelper _databaseHelper = DatabaseHelper.instance;
     List predictedData = _mlService.predictedData;
     String user = _userTextEditingController.text;
     String password = _passwordTextEditingController.text;
+    // Logger().i("Predicted_data: $predictedData");
     User userToSave = User(
       user: user,
       password: password,
       modelData: predictedData,
     );
+    final docRef = db.collection('users_face').doc();
     await _databaseHelper.insert(userToSave);
+
+    //code for storing data in firebase
+    // await docRef.set(userToSave.toMap()).then(
+    //       (value) => Logger().i("User successfully added to the database"),
+    //       onError: (e) => Logger().e("Failed to add user to the database: $e"),
+    //     );
+
     this._mlService.setPredictedData([]);
     Navigator.push(context,
         MaterialPageRoute(builder: (BuildContext context) => MyHomePage()));
@@ -104,7 +119,7 @@ class _AuthActionButtonState extends State<AuthActionButton> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
-          color: Colors.blue[200],
+          color: Colors.blue,
           boxShadow: <BoxShadow>[
             BoxShadow(
               color: Colors.blue.withOpacity(0.1),

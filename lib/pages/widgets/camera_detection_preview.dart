@@ -1,16 +1,19 @@
 import 'package:camera/camera.dart';
 import 'package:face_net_authentication/locator.dart';
+import 'package:face_net_authentication/pages/models/user.model.dart';
 import 'package:face_net_authentication/pages/widgets/FacePainter.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:flutter/material.dart';
 
 class CameraDetectionPreview extends StatelessWidget {
-  CameraDetectionPreview({Key? key}) : super(key: key);
+  CameraDetectionPreview({Key? key, this.user}) : super(key: key);
 
   final CameraService _cameraService = locator<CameraService>();
   final FaceDetectorService _faceDetectorService =
       locator<FaceDetectorService>();
+
+  User? user;
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +37,7 @@ class CameraDetectionPreview extends StatelessWidget {
                   if (_faceDetectorService.faceDetected)
                     CustomPaint(
                       painter: FacePainter(
+                        user: user,
                         face: _faceDetectorService.faces[0],
                         imageSize: _cameraService.getImageSize(),
                       ),

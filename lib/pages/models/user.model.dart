@@ -26,4 +26,9 @@ class User {
       'model_data': jsonEncode(modelData),
     };
   }
+
+  @override
+  String toString() {
+    return 'User{user: $user, password: $password}';
+  }
 }

@@ -1,11 +1,15 @@
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:face_net_authentication/pages/models/user.model.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 class FacePainter extends CustomPainter {
-  FacePainter({required this.imageSize, required this.face});
+  FacePainter({required this.imageSize, required this.face, this.user});
+
   final Size imageSize;
   double? scaleX, scaleY;
   Face? face;
+  User? user;
+
   @override
   void paint(Canvas canvas, Size size) {
     if (face == null) return;
@@ -21,7 +25,7 @@ class FacePainter extends CustomPainter {
       paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.0
-        ..color = Colors.green;
+        ..color = Colors.blue;
     }
 
     scaleX = size.width / imageSize.width;
@@ -35,6 +39,19 @@ class FacePainter extends CustomPainter {
             scaleX: scaleX ?? 1,
             scaleY: scaleY ?? 1),
         paint);
+
+    TextSpan span = TextSpan(
+        style: TextStyle(color: (user == null) ? Colors.red : Colors.green[300], fontSize: 15),
+        text: user?.user ?? 'Unknown');
+    TextPainter textPainter = TextPainter(
+        text: span,
+        textAlign: TextAlign.left,
+        textDirection: TextDirection.ltr);
+    textPainter.layout();
+    textPainter.paint(
+        canvas,
+        Offset(size.width - (60 + face!.boundingBox.left.toDouble()) * scaleX!,
+            (face!.boundingBox.top.toDouble()-40) * scaleY!));
   }
 
   @override
